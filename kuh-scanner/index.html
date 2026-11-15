@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2f6b3a">
+<title>Kuh-Scanner</title>
+<style>
+  :root{--g:#2f6b3a;--gl:#e7f2e4;--ink:#1d2a1f;--mut:#6a7a6c;--bg:#f6f8f3;--card:#fff;--acc:#e8a317}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+  header{background:var(--g);color:#fff;padding:18px 16px 14px;text-align:center}
+  header h1{margin:0;font-size:22px}
+  header p{margin:4px 0 0;font-size:13px;opacity:.85}
+  main{max-width:520px;margin:0 auto;padding:14px}
+  .card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+  .btn{display:block;width:100%;border:0;border-radius:12px;padding:15px;font-size:17px;font-weight:600;background:var(--g);color:#fff;cursor:pointer;text-align:center}
+  .btn.sec{background:var(--gl);color:var(--g)}
+  .btn:disabled{opacity:.5}
+  input[type=text]{width:100%;padding:13px;font-size:19px;border:2px solid #cfdccb;border-radius:12px;letter-spacing:1px;text-align:center}
+  .row{display:flex;gap:8px;margin-top:10px}
+  .row>*{flex:1}
+  #preview{width:100%;max-height:220px;object-fit:cover;border-radius:12px;margin-top:12px;display:none}
+  .status{font-size:14px;color:var(--mut);margin-top:10px;text-align:center;min-height:18px}
+  #result{display:none;text-align:center}
+  #result .cow{font-size:54px;line-height:1}
+  #result .name{font-size:42px;font-weight:800;color:var(--g);margin:6px 0}
+  #result .tag{font-family:ui-monospace,monospace;color:var(--mut);font-size:15px}
+  #result .badge{display:inline-block;margin-top:10px;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600}
+  .badge.new{background:#fff3d6;color:#8a5a00}
+  .badge.old{background:var(--gl);color:var(--g)}
+  h2{font-size:15px;margin:0 0 8px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px}
+  ul{list-style:none;margin:0;padding:0}
+  li{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid #eef2ea}
+  li:first-child{border-top:0}
+  li b{font-size:17px}
+  li small{color:var(--mut);display:block;font-family:ui-monospace,monospace}
+  li span.n{background:var(--gl);color:var(--g);border-radius:99px;padding:3px 10px;font-size:13px;font-weight:600}
+  .empty{color:var(--mut);font-size:14px;text-align:center;padding:8px}
+  footer{text-align:center;color:var(--mut);font-size:12px;padding:6px 14px 30px}
+  .link{background:none;border:0;color:var(--mut);text-decoration:underline;font-size:13px;cursor:pointer}
+  @keyframes pop{0%{transform:scale(.7);opacity:0}100%{transform:scale(1);opacity:1}}
+  .pop{animation:pop .35s ease-out}
+</style>
+</head>
+<body>
+<header>
+  <h1>🐄 Kuh-Scanner</h1>
+  <p>Ohrmarke rein – Name raus. Garantiert wissenschaftlich ungeprüft.</p>
+</header>
+<main>
+  <div class="card">
+    <input type="file" id="cam" accept="image/*" capture="environment" hidden>
+    <button class="btn" id="scanBtn">📷 Ohrmarke fotografieren</button>
+    <img id="preview" alt="Foto der Ohrmarke">
+    <div class="status" id="status"></div>
+    <div style="margin-top:6px">
+      <input type="text" id="tag" inputmode="numeric" placeholder="Nummer eintippen, z. B. 120 1234 5678" autocomplete="off">
+      <div class="row"><button class="btn sec" id="goBtn">Name ermitteln</button></div>
+    </div>
+  </div>
+
+  <div class="card" id="result" aria-live="polite">
+    <div class="cow">🐮</div>
+    <div class="name" id="rName"></div>
+    <div class="tag" id="rTag"></div>
+    <div class="badge" id="rBadge"></div>
+  </div>
+
+  <div class="card">
+    <h2>Bekannte Kühe</h2>
+    <ul id="list"></ul>
+    <div class="empty" id="empty">Noch keine Kuh gescannt.</div>
+  </div>
+  <div style="text-align:center"><button class="link" id="resetBtn">Alle Kühe vergessen</button></div>
+</main>
+<footer>Die «Datenbank» lebt nur in diesem Browser (localStorage). Gleiche Nummer = gleicher Name.</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" async></script>
+<script>
+const NAMES = ["Berta","Heidi","Vreni","Resli","Blüemli","Zita","Gretl","Lisi","Fleckli","Mona","Nelly","Stella","Sonja","Flurina","Mengia","Annatina","Cilgia","Selina","Uorschla","Gianna","Bella","Lilly","Rosa","Frieda","Marlis","Trudi","Elsi","Ida","Hanni","Gerda","Alma","Pia","Sabina","Luzia","Margritli","Edelweiss","Alpina","Gamsli","Murmeli","Chäsli","Rösli","Zottel","Bimba","Trina","Dorli","Christa","Sepp-Line","Glöggli","Nora","Cäcilia","Chatrina","Madlaina","Mia","Tilda","Wiesli","Brunhilde","Jolanda","Kunigunde","Greta","Olga"];
+const KEY = "kuh-scanner-v1";
+let mem = {};
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)) || mem; }catch(e){ return mem; } }
+function save(db){ mem = db; try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){} }
+const $ = id => document.getElementById(id);
+
+function normalize(s){ return (s||"").replace(/\D/g,""); }
+function pretty(d){ return d.replace(/(\d{3})(\d{4})(\d+)/,"$1 $2 $3"); }
+
+function pickName(db){
+  const used = new Set(Object.values(db).map(v=>v.name));
+  const free = NAMES.filter(n=>!used.has(n));
+  if(free.length) return free[Math.floor(Math.random()*free.length)];
+  const base = NAMES[Math.floor(Math.random()*NAMES.length)];
+  let i = 2; while(used.has(base+" "+i)) i++;
+  return base+" "+i;
+}
+
+function lookup(raw){
+  const d = normalize(raw);
+  if(d.length < 4){ $("status").textContent = "Bitte mindestens 4 Ziffern eingeben."; return; }
+  const db = load();
+  let rec = db[d], isNew = false;
+  if(!rec){ rec = {name: pickName(db), first: Date.now(), count: 0}; isNew = true; }
+  rec.count++; rec.last = Date.now();
+  db[d] = rec; save(db);
+  $("rName").textContent = rec.name;
+  $("rTag").textContent = pretty(d);
+  const b = $("rBadge");
+  b.className = "badge " + (isNew ? "new" : "old");
+  b.textContent = isNew ? "🎉 Frisch getauft!" : "✓ Bekannt – schon " + rec.count + "× gescannt";
+  const r = $("result"); r.style.display = "block";
+  r.classList.remove("pop"); void r.offsetWidth; r.classList.add("pop");
+  r.scrollIntoView({behavior:"smooth", block:"nearest"});
+  render();
+}
+
+function render(){
+  const db = load();
+  const entries = Object.entries(db).sort((a,b)=>b[1].last-a[1].last);
+  $("empty").style.display = entries.length ? "none" : "block";
+  $("list").innerHTML = entries.map(([d,v])=>
+    `<li><div><b>${v.name}</b><small>${pretty(d)}</small></div><span class="n">${v.count}×</span></li>`).join("");
+}
+
+// --- OCR ---
+function bestNumber(text){
+  let best = "";
+  for(const line of text.split(/\n/)){
+    const d = normalize(line);
+    if(d.length > best.length) best = d;
+  }
+  return best.length >= 4 ? best : "";
+}
+async function ocr(file){
+  // 1) native text detector (if browser has it)
+  try{
+    if("TextDetector" in window){
+      const bmp = await createImageBitmap(file);
+      const res = await new TextDetector().detect(bmp);
+      const n = bestNumber(res.map(r=>r.rawValue).join("\n"));
+      if(n) return n;
+    }
+  }catch(e){}
+  // 2) Tesseract.js
+  if(!window.Tesseract) throw new Error("no-ocr");
+  const { data } = await Tesseract.recognize(file, "eng", {
+    tessedit_char_whitelist: "0123456789CH ",
+    logger: m => { if(m.status==="recognizing text") $("status").textContent = "Lese Ohrmarke … " + Math.round(m.progress*100) + " %"; }
+  });
+  return bestNumber(data.text);
+}
+
+$("scanBtn").onclick = () => $("cam").click();
+$("cam").onchange = async e => {
+  const f = e.target.files[0]; if(!f) return;
+  const p = $("preview"); p.src = URL.createObjectURL(f); p.style.display = "block";
+  $("status").textContent = "Lese Ohrmarke …";
+  try{
+    const n = await ocr(f);
+    if(n){ $("tag").value = pretty(n); $("status").textContent = "Erkannt: " + pretty(n) + " – stimmt das?"; lookup(n); }
+    else { $("status").textContent = "Nichts erkannt – bitte Nummer unten tippen (Foto bleibt als Gedächtnisstütze)."; $("tag").focus(); }
+  }catch(err){
+    $("status").textContent = "Texterkennung hier nicht verfügbar – bitte Nummer vom Foto abtippen.";
+    $("tag").focus();
+  }
+  e.target.value = "";
+};
+$("goBtn").onclick = () => lookup($("tag").value);
+$("tag").addEventListener("keydown", e => { if(e.key==="Enter") lookup($("tag").value); });
+
+let armed = false;
+$("resetBtn").onclick = () => {
+  const b = $("resetBtn");
+  if(!armed){ armed = true; b.textContent = "Sicher? Nochmals tippen zum Löschen"; setTimeout(()=>{armed=false;b.textContent="Alle Kühe vergessen";},4000); return; }
+  save({}); armed = false; b.textContent = "Alle Kühe vergessen"; $("result").style.display="none"; render();
+};
+render();
+</script>
+</body>
+</html>
