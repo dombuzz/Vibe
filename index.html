@@ -143,8 +143,16 @@ const $ = id => document.getElementById(id);
 
 function normalize(s){ return (s||"").replace(/\D/g,""); }
 // 5 Ziffern = Stallnummer (gross gedruckt) + Prüfziffer -> nur die 4 grossen Ziffern zählen
-function canon(d){ return d.length === 5 ? d.slice(0,4) : d; }
-function pretty(d){ return d.replace(/(\d{3})(\d{4})(\d+)/,"$1 $2 $3"); }
+// 12 Ziffern = 11-stellige Nummer + Prüfziffer -> die letzten 4 Ziffern vor der Prüfziffer (Stallnummer)
+function canon(d){
+  if(d.length === 12) return d.slice(7,11);
+  if(d.length === 5) return d.slice(0,4);
+  return d;
+}
+function pretty(d){
+  if(d.length === 12) return d.replace(/(\d{3})(\d{4})(\d{4})(\d)/,"$1 $2 $3 $4");
+  return d;
+}
 
 function pickName(db){
   const used = new Set(Object.values(db).map(v=>v.name));
@@ -169,7 +177,8 @@ async function lookup(raw){
     return;
   }
   const d = canon(dd);
-  const note = dd.length === 5 ? "Die letzte Ziffer (" + dd[4] + ") wird als Prüfziffer gewertet und nicht berücksichtigt." : "";
+  const note = dd.length === 5 ? "Die letzte Ziffer (" + dd[4] + ") wird als Prüfziffer gewertet und nicht berücksichtigt."
+    : dd.length === 12 ? "Massgebend sind die letzten 4 Ziffern vor der Prüfziffer (" + d + ")." : "";
   const db = load();
   let name, isNew;
   if(API){
@@ -191,7 +200,7 @@ async function lookup(raw){
   rec.name = name; rec.count++; rec.last = Date.now();
   db[d] = rec; save(db);
   $("rName").textContent = rec.name;
-  $("rTag").textContent = pretty(d);
+  $("rTag").textContent = pretty(dd);
   $("rNote").textContent = note;
   const r = $("result"); r.style.display = "block";
   r.scrollIntoView({behavior:"smooth", block:"nearest"});
