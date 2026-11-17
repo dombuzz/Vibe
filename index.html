@@ -101,21 +101,19 @@
     <dl>
       <dt>Name des Tieres</dt><dd class="name" id="rName"></dd>
       <dt>Ohrmarkennummer</dt><dd class="tag" id="rTag"></dd>
-      <dt>Status</dt><dd><span class="badge" id="rBadge"></span></dd>
     </dl>
   </section>
 
   <section>
-    <h2>Erfasste Tiere</h2>
+    <h2>Verlauf</h2>
     <table id="tbl" style="display:none">
-      <thead><tr><th>Name / Ohrmarke</th><th class="num">Abfragen hier</th></tr></thead>
+      <thead><tr><th>Name / Ohrmarke</th><th class="num">Abfragen</th></tr></thead>
       <tbody id="list"></tbody>
     </table>
-    <div class="empty" id="empty">Noch keine Tiere erfasst.</div>
+    <div class="empty" id="empty">Noch keine Abfragen.</div>
   </section>
-  <div><button class="link" id="resetBtn" type="button">Erfasste Tiere löschen</button></div>
+  <div><button class="link" id="resetBtn" type="button">Verlauf löschen</button></div>
 </main>
-<footer>Die Angaben werden ausschliesslich auf diesem Gerät gespeichert.</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" async></script>
 <script>
@@ -165,9 +163,6 @@ async function lookup(raw){
   db[d] = rec; save(db);
   $("rName").textContent = rec.name;
   $("rTag").textContent = pretty(d);
-  const b = $("rBadge");
-  b.className = "badge " + (isNew ? "new" : "old");
-  b.textContent = isNew ? "Neu erfasst" : "Bereits erfasst";
   const r = $("result"); r.style.display = "block";
   r.scrollIntoView({behavior:"smooth", block:"nearest"});
   render();
@@ -231,10 +226,9 @@ $("tag").addEventListener("keydown", e => { if(e.key==="Enter") lookup($("tag").
 let armed = false;
 $("resetBtn").onclick = () => {
   const b = $("resetBtn");
-  if(!armed){ armed = true; b.textContent = "Wirklich löschen? Erneut antippen zur Bestätigung"; setTimeout(()=>{armed=false;b.textContent="Erfasste Tiere löschen";},4000); return; }
-  save({}); armed = false; b.textContent = "Erfasste Tiere löschen"; $("result").style.display="none"; render();
+  if(!armed){ armed = true; b.textContent = "Wirklich löschen? Erneut antippen zur Bestätigung"; setTimeout(()=>{armed=false;b.textContent="Verlauf löschen";},4000); return; }
+  save({}); armed = false; b.textContent = "Verlauf löschen"; $("result").style.display="none"; render();
 };
-if(API){ const f=document.querySelector("footer"); if(f) f.textContent = "Die Zuordnung wird zentral gespeichert und gilt auf allen Geräten."; }
 render();
 
 // --- Darstellung (hell / dunkel) ---
