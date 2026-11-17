@@ -127,6 +127,8 @@ function save(db){ mem = db; try{ localStorage.setItem(KEY, JSON.stringify(db));
 const $ = id => document.getElementById(id);
 
 function normalize(s){ return (s||"").replace(/\D/g,""); }
+// 5 Ziffern = Stallnummer (gross gedruckt) + Prüfziffer -> nur die 4 grossen Ziffern zählen
+function canon(d){ return d.length === 5 ? d.slice(0,4) : d; }
 function pretty(d){ return d.replace(/(\d{3})(\d{4})(\d+)/,"$1 $2 $3"); }
 
 function pickName(db){
@@ -139,8 +141,8 @@ function pickName(db){
 }
 
 async function lookup(raw){
-  const d = normalize(raw);
-  if(d.length < 8 || d.length > 14 || /^(\d)\1+$/.test(d)){
+  const d = canon(normalize(raw));
+  if(d.length < 4 || d.length > 14 || /^(\d)\1+$/.test(d)){
     $("status").textContent = "Ungültige Ohrmarkennummer. Bitte Eingabe prüfen.";
     $("result").style.display = "none";
     return;
@@ -182,6 +184,15 @@ function render(){
 }
 
 // --- OCR ---
+function pickBig(items){
+  let best = null;
+  for(const it of items){
+    const d = normalize(it.text);
+    if(d.length < 4) continue;
+    if(!best || it.h > best.h) best = {d, h: it.h};
+  }
+  return best ? canon(best.d) : "";
+}
 function bestNumber(text){
   let best = "";
   for(const line of text.split(/\n/)){
@@ -196,7 +207,7 @@ async function ocr(file){
     if("TextDetector" in window){
       const bmp = await createImageBitmap(file);
       const res = await new TextDetector().detect(bmp);
-      const n = bestNumber(res.map(r=>r.rawValue).join("\n"));
+      const n = pickBig(res.map(r => ({text: r.rawValue, h: r.boundingBox ? r.boundingBox.height : 0})));
       if(n) return n;
     }
   }catch(e){}
@@ -206,7 +217,8 @@ async function ocr(file){
     tessedit_char_whitelist: "0123456789CH ",
     logger: m => { if(m.status==="recognizing text") $("status").textContent = "Ohrmarke wird gelesen … " + Math.round(m.progress*100) + " %"; }
   });
-  return bestNumber(data.text);
+  const big = pickBig((data.words || []).map(w => ({text: w.text, h: w.bbox.y1 - w.bbox.y0})));
+  return big || canon(bestNumber(data.text));
 }
 
 $("scanBtn").onclick = () => $("cam").click();
