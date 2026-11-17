@@ -3,78 +3,116 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#2f6b3a">
-<title>Kuh-Scanner</title>
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#d8232a">
+<title>Ohrmarkenabfrage</title>
 <style>
-  :root{--g:#2f6b3a;--gl:#e7f2e4;--ink:#1d2a1f;--mut:#6a7a6c;--bg:#f6f8f3;--card:#fff;--acc:#e8a317}
+  :root{
+    --bg:#f3f4f5; --surface:#ffffff; --ink:#1f2328; --mut:#5d6670; --line:#d4d9de;
+    --red:#d8232a; --red-ink:#ffffff; --red-dark:#b01c22; --tint:#eef0f2; --ok:#1d6b3a; --okbg:#e6f2ea; --newbg:#e8eef7; --new:#1f4e8c;
+    --focus:#1a5fb4;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14171a; --surface:#1d2125; --ink:#e9ecef; --mut:#a2acb6; --line:#363c43;
+      --red:#e5484d; --red-ink:#ffffff; --red-dark:#f06a6e; --tint:#262b31; --ok:#7fd29a; --okbg:#1b2d22; --newbg:#1c2735; --new:#8db8f0;
+      --focus:#7aa7e8;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14171a; --surface:#1d2125; --ink:#e9ecef; --mut:#a2acb6; --line:#363c43;
+    --red:#e5484d; --red-ink:#ffffff; --red-dark:#f06a6e; --tint:#262b31; --ok:#7fd29a; --okbg:#1b2d22; --newbg:#1c2735; --new:#8db8f0;
+    --focus:#7aa7e8;
+  }
   *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
-  header{background:var(--g);color:#fff;padding:18px 16px 14px;text-align:center}
-  header h1{margin:0;font-size:22px}
-  header p{margin:4px 0 0;font-size:13px;opacity:.85}
-  main{max-width:520px;margin:0 auto;padding:14px}
-  .card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-  .btn{display:block;width:100%;border:0;border-radius:12px;padding:15px;font-size:17px;font-weight:600;background:var(--g);color:#fff;cursor:pointer;text-align:center}
-  .btn.sec{background:var(--gl);color:var(--g)}
-  .btn:disabled{opacity:.5}
-  input[type=text]{width:100%;padding:13px;font-size:19px;border:2px solid #cfdccb;border-radius:12px;letter-spacing:1px;text-align:center}
-  .row{display:flex;gap:8px;margin-top:10px}
-  .row>*{flex:1}
-  #preview{width:100%;max-height:220px;object-fit:cover;border-radius:12px;margin-top:12px;display:none}
-  .status{font-size:14px;color:var(--mut);margin-top:10px;text-align:center;min-height:18px}
-  #result{display:none;text-align:center}
-  #result .cow{font-size:54px;line-height:1}
-  #result .name{font-size:42px;font-weight:800;color:var(--g);margin:6px 0}
-  #result .tag{font-family:ui-monospace,monospace;color:var(--mut);font-size:15px}
-  #result .badge{display:inline-block;margin-top:10px;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600}
-  .badge.new{background:#fff3d6;color:#8a5a00}
-  .badge.old{background:var(--gl);color:var(--g)}
-  h2{font-size:15px;margin:0 0 8px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px}
-  ul{list-style:none;margin:0;padding:0}
-  li{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid #eef2ea}
-  li:first-child{border-top:0}
-  li b{font-size:17px}
-  li small{color:var(--mut);display:block;font-family:ui-monospace,monospace}
-  li span.n{background:var(--gl);color:var(--g);border-radius:99px;padding:3px 10px;font-size:13px;font-weight:600}
-  .empty{color:var(--mut);font-size:14px;text-align:center;padding:8px}
-  footer{text-align:center;color:var(--mut);font-size:12px;padding:6px 14px 30px}
-  .link{background:none;border:0;color:var(--mut);text-decoration:underline;font-size:13px;cursor:pointer}
-  @keyframes pop{0%{transform:scale(.7);opacity:0}100%{transform:scale(1);opacity:1}}
-  .pop{animation:pop .35s ease-out}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45}
+  .topbar{background:var(--surface);border-top:5px solid var(--red);border-bottom:1px solid var(--line)}
+  .topin{max-width:560px;margin:0 auto;padding:14px 16px 12px}
+  .topin .org{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
+  .topin h1{margin:0;font-size:24px;font-weight:700;line-height:1.2}
+  .topin p{margin:6px 0 0;font-size:14px;color:var(--mut)}
+  .theme{display:flex;margin-top:12px;border:1px solid var(--line);border-radius:3px;overflow:hidden;width:max-content}
+  .theme button{border:0;background:var(--surface);color:var(--ink);font:inherit;font-size:13px;padding:7px 14px;cursor:pointer;border-right:1px solid var(--line)}
+  .theme button:last-child{border-right:0}
+  .theme button[aria-pressed="true"]{background:var(--ink);color:var(--surface);font-weight:600}
+  main{max-width:560px;margin:0 auto;padding:16px}
+  section{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:16px;margin-bottom:16px}
+  h2{margin:0 0 12px;font-size:16px;font-weight:700}
+  label{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
+  .btn{display:block;width:100%;border:1px solid var(--red);border-radius:3px;padding:13px 14px;font:inherit;font-size:16px;font-weight:600;background:var(--red);color:var(--red-ink);cursor:pointer;text-align:center}
+  .btn:hover{background:var(--red-dark);border-color:var(--red-dark)}
+  .btn.sec{background:transparent;color:var(--ink);border-color:var(--ink)}
+  .btn.sec:hover{background:var(--tint)}
+  button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+  input[type=text]{width:100%;padding:12px;font:inherit;font-size:18px;color:var(--ink);background:var(--surface);border:1px solid var(--mut);border-radius:3px;letter-spacing:.5px}
+  input::placeholder{color:var(--mut)}
+  .sep{height:1px;background:var(--line);margin:16px 0}
+  #preview{width:100%;max-height:200px;object-fit:cover;border:1px solid var(--line);border-radius:3px;margin-top:12px;display:none}
+  .status{font-size:14px;color:var(--mut);margin-top:10px;min-height:20px}
+  #result{display:none;border-left:5px solid var(--red)}
+  #result dl{margin:0}
+  #result dt{font-size:13px;color:var(--mut);margin:0}
+  #result dd{margin:0 0 12px}
+  #result .name{font-size:34px;font-weight:700;line-height:1.15}
+  #result .tag{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:18px}
+  .badge{display:inline-block;padding:4px 10px;border-radius:3px;font-size:13px;font-weight:600}
+  .badge.new{background:var(--newbg);color:var(--new)}
+  .badge.old{background:var(--okbg);color:var(--ok)}
+  table{width:100%;border-collapse:collapse;font-size:15px}
+  th{text-align:left;font-size:13px;color:var(--mut);font-weight:600;padding:0 0 8px;border-bottom:2px solid var(--ink)}
+  td{padding:10px 0;border-bottom:1px solid var(--line);vertical-align:top}
+  td.num,th.num{text-align:right;white-space:nowrap}
+  td .t{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:var(--mut)}
+  .empty{color:var(--mut);font-size:14px}
+  .link{background:none;border:0;color:var(--ink);text-decoration:underline;font:inherit;font-size:14px;cursor:pointer;padding:4px 0}
+  footer{max-width:560px;margin:0 auto;padding:0 16px 32px;color:var(--mut);font-size:13px}
 </style>
 </head>
 <body>
-<header>
-  <h1>🐄 Kuh-Scanner</h1>
-  <p>Ohrmarke rein – Name raus. Garantiert wissenschaftlich ungeprüft.</p>
-</header>
+<div class="topbar"><div class="topin">
+  <div class="org">Tierkennzeichnung</div>
+  <h1>Ohrmarkenabfrage</h1>
+  <p>Zuordnung von Rindern anhand der Ohrmarkennummer.</p>
+  <div class="theme" role="group" aria-label="Darstellung">
+    <button type="button" data-t="light" aria-pressed="false">Hell</button>
+    <button type="button" data-t="dark" aria-pressed="false">Dunkel</button>
+    <button type="button" data-t="auto" aria-pressed="true">Automatisch</button>
+  </div>
+</div></div>
 <main>
-  <div class="card">
+  <section>
+    <h2>Abfrage</h2>
     <input type="file" id="cam" accept="image/*" capture="environment" hidden>
-    <button class="btn" id="scanBtn">📷 Ohrmarke fotografieren</button>
+    <button class="btn" id="scanBtn" type="button">Ohrmarke fotografieren</button>
     <img id="preview" alt="Foto der Ohrmarke">
-    <div class="status" id="status"></div>
-    <div style="margin-top:6px">
-      <input type="text" id="tag" inputmode="numeric" placeholder="Nummer eintippen, z. B. 120 1234 5678" autocomplete="off">
-      <div class="row"><button class="btn sec" id="goBtn">Name ermitteln</button></div>
-    </div>
-  </div>
+    <div class="status" id="status" aria-live="polite"></div>
+    <div class="sep"></div>
+    <label for="tag">Ohrmarkennummer</label>
+    <input type="text" id="tag" inputmode="numeric" placeholder="z. B. 120 1234 5678" autocomplete="off">
+    <div style="margin-top:10px"><button class="btn sec" id="goBtn" type="button">Abfragen</button></div>
+  </section>
 
-  <div class="card" id="result" aria-live="polite">
-    <div class="cow">🐮</div>
-    <div class="name" id="rName"></div>
-    <div class="tag" id="rTag"></div>
-    <div class="badge" id="rBadge"></div>
-  </div>
+  <section id="result" aria-live="polite">
+    <h2>Ergebnis</h2>
+    <dl>
+      <dt>Name des Tieres</dt><dd class="name" id="rName"></dd>
+      <dt>Ohrmarkennummer</dt><dd class="tag" id="rTag"></dd>
+      <dt>Status</dt><dd><span class="badge" id="rBadge"></span></dd>
+    </dl>
+  </section>
 
-  <div class="card">
-    <h2>Bekannte Kühe</h2>
-    <ul id="list"></ul>
-    <div class="empty" id="empty">Noch keine Kuh gescannt.</div>
-  </div>
-  <div style="text-align:center"><button class="link" id="resetBtn">Alle Kühe vergessen</button></div>
+  <section>
+    <h2>Erfasste Tiere</h2>
+    <table id="tbl" style="display:none">
+      <thead><tr><th>Name / Ohrmarke</th><th class="num">Abfragen</th></tr></thead>
+      <tbody id="list"></tbody>
+    </table>
+    <div class="empty" id="empty">Noch keine Tiere erfasst.</div>
+  </section>
+  <div><button class="link" id="resetBtn" type="button">Erfasste Tiere löschen</button></div>
 </main>
-<footer>Die «Datenbank» lebt nur in diesem Browser (localStorage). Gleiche Nummer = gleicher Name.</footer>
+<footer>Die Angaben werden ausschliesslich auf diesem Gerät gespeichert.</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" async></script>
 <script>
@@ -109,7 +147,7 @@ function lookup(raw){
   $("rTag").textContent = pretty(d);
   const b = $("rBadge");
   b.className = "badge " + (isNew ? "new" : "old");
-  b.textContent = isNew ? "🎉 Frisch getauft!" : "✓ Bekannt – schon " + rec.count + "× gescannt";
+  b.textContent = isNew ? "Neu erfasst" : "Bereits erfasst – " + rec.count + " Abfragen";
   const r = $("result"); r.style.display = "block";
   r.classList.remove("pop"); void r.offsetWidth; r.classList.add("pop");
   r.scrollIntoView({behavior:"smooth", block:"nearest"});
@@ -120,8 +158,9 @@ function render(){
   const db = load();
   const entries = Object.entries(db).sort((a,b)=>b[1].last-a[1].last);
   $("empty").style.display = entries.length ? "none" : "block";
+  $("tbl").style.display = entries.length ? "table" : "none";
   $("list").innerHTML = entries.map(([d,v])=>
-    `<li><div><b>${v.name}</b><small>${pretty(d)}</small></div><span class="n">${v.count}×</span></li>`).join("");
+    `<tr><td><b>${v.name}</b><div class="t">${pretty(d)}</div></td><td class="num">${v.count}</td></tr>`).join("");
 }
 
 // --- OCR ---
@@ -147,7 +186,7 @@ async function ocr(file){
   if(!window.Tesseract) throw new Error("no-ocr");
   const { data } = await Tesseract.recognize(file, "eng", {
     tessedit_char_whitelist: "0123456789CH ",
-    logger: m => { if(m.status==="recognizing text") $("status").textContent = "Lese Ohrmarke … " + Math.round(m.progress*100) + " %"; }
+    logger: m => { if(m.status==="recognizing text") $("status").textContent = "Ohrmarke wird gelesen … " + Math.round(m.progress*100) + " %"; }
   });
   return bestNumber(data.text);
 }
@@ -156,13 +195,13 @@ $("scanBtn").onclick = () => $("cam").click();
 $("cam").onchange = async e => {
   const f = e.target.files[0]; if(!f) return;
   const p = $("preview"); p.src = URL.createObjectURL(f); p.style.display = "block";
-  $("status").textContent = "Lese Ohrmarke …";
+  $("status").textContent = "Ohrmarke wird gelesen …";
   try{
     const n = await ocr(f);
-    if(n){ $("tag").value = pretty(n); $("status").textContent = "Erkannt: " + pretty(n) + " – stimmt das?"; lookup(n); }
-    else { $("status").textContent = "Nichts erkannt – bitte Nummer unten tippen (Foto bleibt als Gedächtnisstütze)."; $("tag").focus(); }
+    if(n){ $("tag").value = pretty(n); $("status").textContent = "Erkannte Nummer: " + pretty(n); lookup(n); }
+    else { $("status").textContent = "Nummer nicht erkannt. Bitte unten manuell eingeben."; $("tag").focus(); }
   }catch(err){
-    $("status").textContent = "Texterkennung hier nicht verfügbar – bitte Nummer vom Foto abtippen.";
+    $("status").textContent = "Automatische Erkennung nicht verfügbar. Bitte Nummer manuell eingeben.";
     $("tag").focus();
   }
   e.target.value = "";
@@ -173,10 +212,22 @@ $("tag").addEventListener("keydown", e => { if(e.key==="Enter") lookup($("tag").
 let armed = false;
 $("resetBtn").onclick = () => {
   const b = $("resetBtn");
-  if(!armed){ armed = true; b.textContent = "Sicher? Nochmals tippen zum Löschen"; setTimeout(()=>{armed=false;b.textContent="Alle Kühe vergessen";},4000); return; }
-  save({}); armed = false; b.textContent = "Alle Kühe vergessen"; $("result").style.display="none"; render();
+  if(!armed){ armed = true; b.textContent = "Wirklich löschen? Erneut antippen zur Bestätigung"; setTimeout(()=>{armed=false;b.textContent="Erfasste Tiere löschen";},4000); return; }
+  save({}); armed = false; b.textContent = "Erfasste Tiere löschen"; $("result").style.display="none"; render();
 };
 render();
+
+// --- Darstellung (hell / dunkel / automatisch) ---
+const TKEY = "ohrmarken-theme";
+function setTheme(t, persist){
+  const root = document.documentElement;
+  if(t === "light" || t === "dark") root.setAttribute("data-theme", t); else root.removeAttribute("data-theme");
+  document.querySelectorAll(".theme button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.t === (t||"auto"))));
+  if(persist){ try{ localStorage.setItem(TKEY, t); }catch(e){} }
+}
+document.querySelectorAll(".theme button").forEach(b => b.onclick = () => setTheme(b.dataset.t, true));
+let saved = "auto"; try{ saved = localStorage.getItem(TKEY) || "auto"; }catch(e){}
+setTheme(saved, false);
 </script>
 </body>
 </html>
