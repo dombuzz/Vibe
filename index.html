@@ -70,6 +70,12 @@
   td .t{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:var(--mut)}
   .empty{color:var(--mut);font-size:14px}
   .link{background:none;border:0;color:var(--ink);text-decoration:underline;font:inherit;font-size:14px;cursor:pointer;padding:4px 0}
+  .note{font-size:13px;color:var(--mut);margin-top:2px}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:10}
+  .overlay.on{display:flex}
+  .modal{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-top:5px solid var(--red);border-radius:3px;max-width:420px;width:100%;padding:18px}
+  .modal h3{margin:0 0 8px;font-size:18px}
+  .modal p{margin:0 0 16px;font-size:15px}
   footer{max-width:560px;margin:0 auto;padding:0 16px 32px;color:var(--mut);font-size:13px}
 </style>
 </head>
@@ -102,6 +108,7 @@
       <dt>Name des Tieres</dt><dd class="name" id="rName"></dd>
       <dt>Ohrmarkennummer</dt><dd class="tag" id="rTag"></dd>
     </dl>
+    <div class="note" id="rNote"></div>
   </section>
 
   <section>
@@ -114,6 +121,14 @@
   </section>
   <div><button class="link" id="resetBtn" type="button">Verlauf löschen</button></div>
 </main>
+
+<div class="overlay" id="overlay" role="alertdialog" aria-modal="true" aria-labelledby="mTitle" aria-describedby="mText">
+  <div class="modal">
+    <h3 id="mTitle">Eingabe prüfen</h3>
+    <p id="mText"></p>
+    <button class="btn" id="mOk" type="button">OK</button>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" async></script>
 <script>
@@ -141,12 +156,20 @@ function pickName(db){
 }
 
 async function lookup(raw){
-  const d = canon(normalize(raw));
-  if(d.length < 4 || d.length > 14 || /^(\d)\1+$/.test(d)){
+  const dd = normalize(raw);
+  if(dd.length < 4 || /^(\d)\1+$/.test(dd)){
     $("status").textContent = "Ungültige Ohrmarkennummer. Bitte Eingabe prüfen.";
     $("result").style.display = "none";
     return;
   }
+  if(dd.length !== 4 && dd.length !== 5 && dd.length !== 12){
+    $("status").textContent = "";
+    $("result").style.display = "none";
+    showModal("Die Nummer hat " + dd.length + " Ziffern. Bitte die vollständige, 12-stellige Ohrmarkennummer oder nur die letzten 4 Ziffern eingeben.");
+    return;
+  }
+  const d = canon(dd);
+  const note = dd.length === 5 ? "Die letzte Ziffer (" + dd[4] + ") wird als Prüfziffer gewertet und nicht berücksichtigt." : "";
   const db = load();
   let name, isNew;
   if(API){
@@ -169,6 +192,7 @@ async function lookup(raw){
   db[d] = rec; save(db);
   $("rName").textContent = rec.name;
   $("rTag").textContent = pretty(d);
+  $("rNote").textContent = note;
   const r = $("result"); r.style.display = "block";
   r.scrollIntoView({behavior:"smooth", block:"nearest"});
   render();
@@ -182,6 +206,17 @@ function render(){
   $("list").innerHTML = entries.map(([d,v])=>
     `<tr><td><b>${v.name}</b><div class="t">${pretty(d)}</div></td><td class="num">${v.count}</td></tr>`).join("");
 }
+
+// --- Hinweis-Dialog ---
+function showModal(msg){
+  $("mText").textContent = msg;
+  $("overlay").classList.add("on");
+  $("mOk").focus();
+}
+function closeModal(){ $("overlay").classList.remove("on"); }
+$("mOk").onclick = closeModal;
+$("overlay").addEventListener("click", e => { if(e.target === $("overlay")) closeModal(); });
+document.addEventListener("keydown", e => { if(e.key === "Escape") closeModal(); });
 
 // --- OCR ---
 function pickBig(items){
