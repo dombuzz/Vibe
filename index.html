@@ -140,7 +140,11 @@ function pickName(db){
 
 async function lookup(raw){
   const d = normalize(raw);
-  if(d.length < 4){ $("status").textContent = "Bitte mindestens 4 Ziffern eingeben."; return; }
+  if(d.length < 8 || d.length > 14 || /^(\d)\1+$/.test(d)){
+    $("status").textContent = "Ungültige Ohrmarkennummer. Bitte Eingabe prüfen.";
+    $("result").style.display = "none";
+    return;
+  }
   const db = load();
   let name, isNew;
   if(API){
