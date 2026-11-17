@@ -121,7 +121,7 @@
 <script>
 const NAMES = ["Berta","Heidi","Vreni","Resli","Blüemli","Zita","Gretl","Lisi","Fleckli","Mona","Nelly","Stella","Sonja","Flurina","Mengia","Annatina","Cilgia","Selina","Uorschla","Gianna","Bella","Lilly","Rosa","Frieda","Marlis","Trudi","Elsi","Ida","Hanni","Gerda","Alma","Pia","Sabina","Luzia","Margritli","Edelweiss","Alpina","Gamsli","Murmeli","Chäsli","Rösli","Zottel","Bimba","Trina","Dorli","Christa","Sepp-Line","Glöggli","Nora","Cäcilia","Chatrina","Madlaina","Mia","Tilda","Wiesli","Brunhilde","Jolanda","Kunigunde","Greta","Olga"];
 // URL des Workers (nach dem Deployen eintragen). Leer = nur lokal auf diesem Gerät.
-const API = "";
+const API = "https://cow-api.zappa-pfadi.workers.dev";
 const KEY = "kuh-scanner-v1";
 let mem = {};
 function load(){ try{ return JSON.parse(localStorage.getItem(KEY)) || mem; }catch(e){ return mem; } }
